@@ -91,9 +91,6 @@ class MoodleController extends Controller
     /**
      * Obtener usuario por username
      */
-        /**
-     * Obtener usuario por username
-     */
     public function getUserByUsername($username)
     {
         try {
@@ -134,9 +131,6 @@ class MoodleController extends Controller
         }
     }
 
-    /**
-     * Obtener información personalizada del usuario desde Moodle DB
-     */
     public function getUserInfoData($userId)
     {
         try {

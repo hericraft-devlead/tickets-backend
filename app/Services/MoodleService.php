@@ -102,7 +102,10 @@ class MoodleService
             "courseid" => $courseId
         ]);
     }
- 
+
+    /**
+     * Login usando el servicio personalizado AppServiceLogin
+     */
     public function customLogin($username, $password)
     {
         return $this->call('AppServiceLogin', [
@@ -111,45 +114,63 @@ class MoodleService
         ]);
     }
 
+    /**
+     * Autenticar usuario usando el servicio personalizado
+     */
     public function authenticateWithCustomService($username, $password)
     {
         $result = $this->customLogin($username, $password);
         
         if ($result['success']) {
+            // El servicio personalizado podría retornar diferentes estructuras
+            // Ajusta según lo que retorne tu servicio específico
             return $result;
         }
         
         return $result;
     }
-    
+
+    /**
+     * Obtener usuario por credenciales usando el servicio personalizado
+     */
     public function getUserByCredentialsCustom($username, $password)
     {
+        // Usar el servicio personalizado para login
         $loginResult = $this->authenticateWithCustomService($username, $password);
         
         if (!$loginResult['success']) {
             return $loginResult;
         }
 
+        // Si el login fue exitoso, obtener información completa del usuario
         return $this->call('core_user_get_users_by_field', [
             'field' => 'username',
             'values[0]' => $username
         ]);
     }
 
+    /**
+     * Obtener usuario por credenciales (método estándar)
+     */
     public function getUserByCredentials($username, $password)
     {
+        // Primero intentamos autenticar con método estándar
         $authResult = $this->authenticateUser($username, $password);
         
         if (!$authResult['success']) {
             return $authResult;
         }
 
+        // Si la autenticación fue exitosa, buscamos el usuario
         return $this->call('core_user_get_users_by_field', [
             'field' => 'username',
             'values[0]' => $username
         ]);
     }
 
+    /**
+     * Autenticar usuario en Moodle (método estándar)
+     */
     public function authenticateUser($username, $password)
     {
         return $this->call('auth_userkey_request_login_url', [
@@ -160,6 +181,9 @@ class MoodleService
         ]);
     }
 
+    /**
+     * Obtener usuario por username (método estándar y confiable)
+     */
     public function getUserByUsername($username)
     {
         try {
@@ -184,109 +208,4 @@ class MoodleService
         }
     }
 
-    public function getAllRoles()
-    {
-        return $this->call('core_role_get_roles');
-    }
-
-
-    public function getUserRoles($userId)
-    {
-        return $this->call('core_role_get_user_roles', [
-            'userid' => $userId
-        ]);
-    }
-
-    public function getUsersRoles($userIds, $contextId = null)
-    {
-        $userlist = [];
-        foreach ((array)$userIds as $userId) {
-            $userlist[] = ['userid' => $userId];
-        }
-
-        $params = [
-            'userlist' => $userlist
-        ];
-
-        if ($contextId) {
-            $params['contextid'] = $contextId;
-        }
-
-        return $this->call('core_role_get_users_roles', $params);
-    }
-
-    public function getUserRolesInCourse($userId, $courseId)
-    {
-        $contextResult = $this->call('core_role_get_context_roles', [
-            'contextlevel' => 'course',
-            'instanceid' => $courseId
-        ]);
-
-        if (!$contextResult['success']) {
-            return $contextResult;
-        }
-
-        $contextId = $contextResult['data'][0]['contextid'] ?? null;
-        
-        if (!$contextId) {
-            return [
-                'success' => false,
-                'error' => 'No se pudo obtener el contexto del curso'
-            ];
-        }
-
-        // Luego obtener los roles del usuario en ese contexto
-        return $this->getUsersRoles([$userId], $contextId);
-    }
-
-    /**
-     * Obtener contextos de roles para un usuario
-     */
-    public function getRoleContexts($userId)
-    {
-        return $this->call('core_role_get_role_contexts', [
-            'userid' => $userId
-        ]);
-    }
-
-    /**
-     * Obtener asignaciones de roles para un usuario
-     */
-    public function getRoleAssignments($userId, $contextLevel = null, $instanceId = null)
-    {
-        $params = ['userid' => $userId];
-        
-        if ($contextLevel) {
-            $params['contextlevel'] = $contextLevel;
-        }
-        
-        if ($instanceId) {
-            $params['instanceid'] = $instanceId;
-        }
-
-        return $this->call('core_role_get_role_assignments', $params);
-    }
-
-    /**
-     * Buscar usuarios por rol (método alternativo)
-     */
-    public function getUsersByRole($roleId, $contextLevel = null, $instanceId = null)
-    {
-        $params = ['roleid' => $roleId];
-        
-        if ($contextLevel) {
-            $params['contextlevel'] = $contextLevel;
-        }
-        
-        if ($instanceId) {
-            $params['instanceid'] = $instanceId;
-        }
-
-        return $this->call('core_role_get_users_by_role', $params);
-    }
-
-    public function getAvailableFunctions()
-    {
-        return $this->call('core_webservice_get_site_info');
-    }   
 }
