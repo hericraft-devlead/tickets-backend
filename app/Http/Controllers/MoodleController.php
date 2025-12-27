@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\MoodleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class MoodleController extends Controller
 {
@@ -128,6 +130,35 @@ class MoodleController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error interno del servidor: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener información personalizada del usuario desde Moodle DB
+     */
+    public function getUserInfoData($userId)
+    {
+        try {
+            $data = DB::connection('moodle')
+                ->table('j5r5_user_info_data')
+                ->select('id', 'userid', 'fieldid', 'data', 'dataformat')
+                ->where('userid', $userId)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'userid' => $userId,
+                'count' => $data->count(),
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error al consultar mdl_user_info_data: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al consultar datos de Moodle',
             ], 500);
         }
     }

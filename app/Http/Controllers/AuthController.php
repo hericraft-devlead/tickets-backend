@@ -57,35 +57,6 @@ class AuthController extends Controller
         return $this->createLoginResponse($moodleUser);
     }
 
-    /**
-     * Login simplificado - solo verifica que el usuario existe
-     */
-    public function simpleLogin(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
-
-        $username = $request->username;
-
-        // Solo verificamos que el usuario existe en Moodle
-        $userResult = $this->moodleService->getUserByUsername($username);
-        
-        if (!$userResult['success'] || empty($userResult['data'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Usuario no encontrado en Moodle'
-            ], 404);
-        }
-
-        $moodleUser = $userResult['data'][0];
-
-        // En una aplicación real, aquí verificarías la contraseña
-        // Por ahora, asumimos que es válida si el usuario existe
-
-        return $this->createLoginResponse($moodleUser);
-    }
 
     /**
      * Crear respuesta de login exitoso
