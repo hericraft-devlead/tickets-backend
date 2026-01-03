@@ -8,10 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('moodle_users', function (Blueprint $table) {
             $table->id();
 
-            $table->string('name')->unique();
+            $table->unsignedBigInteger('moodle_user_id')->unique();
+            $table->string('name');
+            $table->string('email');
 
             $table->timestamps();
         });
@@ -19,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('moodle_users');
     }
 };

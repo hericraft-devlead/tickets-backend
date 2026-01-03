@@ -4,6 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\PriorityController;
+use App\Http\Controllers\TicketStatusController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\MoodleController;
 
 /*
@@ -18,24 +23,24 @@ Route::get('/test', function () {
 
 /*
 |--------------------------------------------------------------------------
-| AUTH MOODLE (usuarios de Moodle)
+| AUTH MOODLE (usuarios Moodle)
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth/moodle')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);      // login Moodle
-    Route::post('/logout', [AuthController::class, 'logout']);    // logout Moodle
-    Route::get('/check', [AuthController::class, 'checkAuth']);   // token válido
-    Route::get('/profile', [AuthController::class, 'profile']);  // perfil Moodle
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/check', [AuthController::class, 'checkAuth']);
+    Route::get('/profile', [AuthController::class, 'profile']);
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| AUTH LOCAL (usuarios de tu BD)
+| AUTH LOCAL
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth/local')->group(function () {
-    Route::post('/login', [UserController::class, 'login']);      // login local
+    Route::post('/login', [UserController::class, 'login']);
 });
 
 
@@ -67,6 +72,49 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | CATEGORIES
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/categories', [CategoryController::class, 'getCategories']);
+    Route::post('/categories', [CategoryController::class, 'createCategory']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAGS
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/tags', [TagController::class, 'getTags']);
+    Route::post('/tags', [TagController::class, 'createTag']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRIORITIES (solo lectura)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/priorities', [PriorityController::class, 'getPriorities']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TICKET STATUS
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/ticket-statuses', [TicketStatusController::class, 'getStatuses']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TICKETS
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/tickets', [TicketController::class, 'getTickets']);
+    Route::post('/tickets', [TicketController::class, 'createTicket']);
+
+
+    /*
+    |--------------------------------------------------------------------------
     | USERS (SOLO ADMIN)
     |--------------------------------------------------------------------------
     */
@@ -78,6 +126,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{id}', [UserController::class, 'deleteUser']);
     });
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| TICKETS PÚBLICOS (SIN LOGIN)
+|--------------------------------------------------------------------------
+| Permite crear tickets sin sesión Moodle
+*/
+Route::post('/public/tickets', [TicketController::class, 'createTicket']);
 
 
 /*

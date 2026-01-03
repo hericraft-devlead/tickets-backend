@@ -8,10 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('priorities', function (Blueprint $table) {
             $table->id();
 
-            $table->string('name')->unique();
+            $table->string('name')->unique()
+                ->comment('Baja, Media, Alta, Crítica');
+
+            $table->unsignedTinyInteger('level')
+                ->comment('Nivel numérico para orden y SLA');
 
             $table->timestamps();
         });
@@ -19,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('priorities');
     }
 };

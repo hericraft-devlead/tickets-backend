@@ -8,10 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('categories', function (Blueprint $table) {
             $table->id();
 
             $table->string('name')->unique();
+
+            $table->foreignId('department_id')
+                ->nullable()
+                ->constrained('departments')
+                ->nullOnDelete()
+                ->comment('Departamento al que se asigna automáticamente');
 
             $table->timestamps();
         });
@@ -19,6 +25,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('categories');
     }
 };

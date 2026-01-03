@@ -15,14 +15,14 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
 
-            $table->tinyInteger('role')
-                  ->default(1)
-                  ->comment('0 = admin, 1 = usuario');
+            $table->unsignedTinyInteger('role')
+                ->default(1)
+                ->comment('0 = admin, 1 = soporte');
 
             $table->foreignId('department_id')
-                  ->nullable()
-                  ->constrained('departments')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('departments')
+                ->nullOnDelete();
 
             $table->rememberToken();
             $table->timestamps();
@@ -36,19 +36,24 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+
+            $table->foreignId('user_id')
+                  ->nullable()
+                  ->index()
+                  ->constrained('users')
+                  ->nullOnDelete();
+
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
     }
-    
+
     public function down(): void
     {
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('users');
-        Schema::dropIfExists('departments');
     }
 };
