@@ -9,10 +9,15 @@ class AuthMoodleMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        
         if (!Auth::guard('moodle')->check()) {
             return response()->json([
-                'message' => 'No autorizado. Solo usuarios Moodle.'
+                'success' => false,
+                'message' => 'No autorizado. Solo usuarios Moodle.',
+                'debug' => [
+                    'authenticated' => Auth::check(),
+                    'guard_used' => 'moodle',
+                    'user' => Auth::guard('moodle')->user() ? 'exists' : 'null'
+                ]
             ], 401);
         }
 
