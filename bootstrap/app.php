@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\AdminMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,11 +11,20 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->api([
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+        
         $middleware->alias([
-            'admin' => AdminMiddleware::class,
+            'auth.moodle' => \App\Http\Middleware\AuthMoodleMiddleware::class,
+            'auth.local' => \App\Http\Middleware\AdminMiddleware::class,
+            'auth.any' => \App\Http\Middleware\AuthAnyMiddleware::class
+        ]);
+        
+        $middleware->group('api', [
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+    ->withExceptions(function (Exceptions $exceptions) {
     })->create();

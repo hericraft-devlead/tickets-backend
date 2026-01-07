@@ -13,13 +13,22 @@ use App\Http\Controllers\MoodleController;
 
 /*
 |--------------------------------------------------------------------------
-| RUTA TEST
+| RUTAS PÚBLICAS (SIN AUTENTICACIÓN)
 |--------------------------------------------------------------------------
 */
 Route::get('/test', function () {
     return response()->json(['message' => 'API funcionando']);
 });
 
+/*
+|--------------------------------------------------------------------------
+| TICKETS PÚBLICOS (SIN LOGIN)
+|--------------------------------------------------------------------------
+| Permite crear tickets sin sesión Moodle
+*/
+Route::post('/tickets', [TicketController::class, 'createTicket']);
+Route::get('/categories', [CategoryController::class, 'getCategories']);
+Route::get('/priorities', [PriorityController::class, 'getPriorities']);
 
 /*
 |--------------------------------------------------------------------------
@@ -28,28 +37,27 @@ Route::get('/test', function () {
 */
 Route::prefix('auth/moodle')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/check', [AuthController::class, 'checkAuth']);
-    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth.moodle');
+    Route::get('/check', [AuthController::class, 'checkAuth'])->middleware('auth.moodle');
+    Route::get('/profile/{userId}', [AuthController::class, 'profile'])->middleware('auth.moodle');
 });
-
 
 /*
 |--------------------------------------------------------------------------
-| AUTH LOCAL
+| AUTH LOCAL (usuarios administradores/agentes)
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth/local')->group(function () {
     Route::post('/login', [UserController::class, 'login']);
 });
 
-
 /*
 |--------------------------------------------------------------------------
-| RUTAS PROTEGIDAS (SANCTUM)
+| RUTAS PROTEGIDAS PARA USUARIOS LOCALES (admin/agentes)
 |--------------------------------------------------------------------------
+| TODAS las rutas que estaban en auth:sanctum ahora van aquí
 */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.local')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -60,58 +68,48 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
 
-
     /*
     |--------------------------------------------------------------------------
-    | DEPARTMENTS
+    | DEPARTMENTS (solo locales)
     |--------------------------------------------------------------------------
     */
     Route::get('/departments', [DepartmentController::class, 'getDepartments']);
     Route::post('/departments', [DepartmentController::class, 'createDepartment']);
 
-
     /*
     |--------------------------------------------------------------------------
-    | CATEGORIES
+    | CATEGORIES (crear - solo locales)
     |--------------------------------------------------------------------------
     */
-    Route::get('/categories', [CategoryController::class, 'getCategories']);
     Route::post('/categories', [CategoryController::class, 'createCategory']);
-
 
     /*
     |--------------------------------------------------------------------------
-    | TAGS
+    | TAGS (solo locales)
     |--------------------------------------------------------------------------
     */
     Route::get('/tags', [TagController::class, 'getTags']);
     Route::post('/tags', [TagController::class, 'createTag']);
 
-
     /*
     |--------------------------------------------------------------------------
-    | PRIORITIES (solo lectura)
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/priorities', [PriorityController::class, 'getPriorities']);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TICKET STATUS
+    | TICKET STATUS (solo locales)
     |--------------------------------------------------------------------------
     */
     Route::get('/ticket-statuses', [TicketStatusController::class, 'getStatuses']);
 
-
     /*
     |--------------------------------------------------------------------------
-    | TICKETS
+    | TICKETS (solo usuarios locales - admin/agentes)
     |--------------------------------------------------------------------------
     */
     Route::get('/tickets', [TicketController::class, 'getTickets']);
-    Route::post('/tickets', [TicketController::class, 'createTicket']);
-
+    Route::get('/tickets/assigned-to/{userId}', [TicketController::class, 'getTicketsAssignedToLocalUser']);
+    Route::get('/tickets/unassigned', [TicketController::class, 'getUnassignedTickets']);
+    Route::get('/tickets/{id}', [TicketController::class, 'getTicket']);
+    Route::put('/tickets/{id}', [TicketController::class, 'updateTicket']);
+    Route::patch('/tickets/{id}', [TicketController::class, 'updateTicket']);
+    Route::delete('/tickets/{id}', [TicketController::class, 'deleteTicket']);
 
     /*
     |--------------------------------------------------------------------------
@@ -127,19 +125,24 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
-| TICKETS PÚBLICOS (SIN LOGIN)
+| RUTAS PROTEGIDAS PARA USUARIOS MOODLE
 |--------------------------------------------------------------------------
-| Permite crear tickets sin sesión Moodle
+| Agrega aquí las rutas que los usuarios Moodle necesitan
 */
-Route::post('/public/tickets', [TicketController::class, 'createTicket']);
-
+Route::middleware('auth.moodle')->group(function () {
+    // Ejemplo: Si quieres que los usuarios Moodle puedan ver SUS tickets
+    Route::get('/my-tickets', [TicketController::class, 'getMyTickets']);
+    
+    // Si necesitas otras rutas específicas para Moodle, agrégalas aquí
+    // Route::get('/my-profile', [AuthController::class, 'getMyProfile']);
+    // Route::get('/tickets/{id}', [TicketController::class, 'getMyTicket']);
+});
 
 /*
 |--------------------------------------------------------------------------
-| MOODLE API (solo consultas)
+| MOODLE API (solo consultas - públicas)
 |--------------------------------------------------------------------------
 */
 Route::prefix('moodle')->group(function () {
@@ -150,3 +153,8 @@ Route::prefix('moodle')->group(function () {
     Route::get('/courses', [MoodleController::class, 'getCourses']);
     Route::post('/call', [MoodleController::class, 'callFunction']);
 });
+
+
+
+
+Route::middleware('auth.any')->get('/tickets/moodle-user/{moodleUserId}', [TicketController::class, 'getTicketsByMoodleUser']);

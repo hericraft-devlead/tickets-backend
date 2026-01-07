@@ -6,15 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::create('moodle_users', function (Blueprint $table) {
             $table->id();
-
-            $table->unsignedBigInteger('moodle_user_id')->unique();
+            $table->bigInteger('moodle_user_id')->unique(); 
+            $table->string('username')->unique(); 
             $table->string('name');
-            $table->string('email');
-
+            $table->string('email')->nullable();
+            $table->string('firstname')->nullable();
+            $table->string('lastname')->nullable();  
+            $table->rememberToken();
             $table->timestamps();
         });
     }

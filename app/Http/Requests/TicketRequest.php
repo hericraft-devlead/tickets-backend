@@ -11,17 +11,19 @@ class TicketRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
-            'title' => 'required|string|max:150',
+            'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'student_name' => 'nullable|string|max:100',
-            'student_email' => 'nullable|email',
+
             'category_id' => 'required|exists:categories,id',
             'priority_id' => 'required|exists:priorities,id',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
+
+            'contact_name' => 'required|string|max:255',
+            'contact_email' => 'required|email|max:255',
+
+            'moodle_user_id' => 'nullable|integer',
         ];
     }
 }

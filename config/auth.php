@@ -45,6 +45,11 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
+
+        'moodle' => [
+        'driver' => 'sanctum',
+        'provider' => 'moodle_users',
+        ],
     ],
 
     /*
@@ -65,16 +70,18 @@ return [
     */
 
     'providers' => [
+
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'moodle_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\MoodleUser::class,
+        ],
     ],
+
 
     /*
     |--------------------------------------------------------------------------
