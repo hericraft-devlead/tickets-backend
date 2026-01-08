@@ -93,8 +93,8 @@ class AuthController extends Controller
             'expires_in' => 7 * 24 * 60 * 60,
             
             'moodle_user' => [
-                'id' => $localMoodleUser->moodle_user_id, // Cambiado aquí
-                'moodle_user_id' => $localMoodleUser->moodle_user_id, // Este ya estaba bien
+                'id' => $localMoodleUser->moodle_user_id, 
+                'moodle_user_id' => $localMoodleUser->moodle_user_id,
                 'name' => $localMoodleUser->name,
                 'email' => $localMoodleUser->email,
                 'username' => $localMoodleUser->username,

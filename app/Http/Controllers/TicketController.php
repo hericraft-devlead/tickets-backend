@@ -46,30 +46,30 @@ class TicketController extends Controller
     public function createTicket(TicketRequest $request)
     {
         $category = Category::findOrFail($request->category_id);
-        $status = TicketStatus::findOrFail(1); 
+        $status = TicketStatus::findOrFail(1);
 
         $ticket = Ticket::create([
             'title' => $request->title,
             'description' => $request->description,
-
             'category_id' => $request->category_id,
             'priority_id' => $request->priority_id,
             'department_id' => $category->department_id,
-
             'status_id' => $status->id,
-
             'moodle_user_id' => $request->moodle_user_id,
-
             'contact_name' => $request->contact_name,
             'contact_email' => $request->contact_email,
         ]);
+
+        if ($request->has('tag_ids') && is_array($request->tag_ids)) {
+            $ticket->tags()->attach($request->tag_ids);
+        }
 
         $users = User::where('department_id', $ticket->department_id)->get();
         Notification::send($users, new NewTicketNotification($ticket));
 
         return response()->json([
             'message' => 'Ticket creado correctamente',
-            'ticket' => $ticket->load(['category', 'priority', 'status']),
+            'ticket' => $ticket->load(['category', 'priority', 'status', 'tags']),
         ], Response::HTTP_CREATED);
     }
 
@@ -143,12 +143,34 @@ class TicketController extends Controller
 
     public function getTicketsByMoodleUser($moodleUserId)
     {
-        $tickets = Ticket::with(['category','priority','status','tags','assignedUser'])
-            ->where('moodle_user_id', $moodleUserId)
-            ->latest()
-            ->paginate(10);
-
-        return response()->json($tickets, Response::HTTP_OK);
+        try {
+            $testTicket = Ticket::first();
+            if ($testTicket) {
+                $testTags = $testTicket->tags()->get();
+                \Log::info('Test tags:', ['count' => $testTags->count()]);
+            }
+            
+            $tickets = Ticket::with(['category','priority','status','tags','assignedUser'])
+                ->where('moodle_user_id', $moodleUserId)
+                ->latest()
+                ->paginate(10);
+                
+            return response()->json($tickets, Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error en getTicketsByMoodleUser:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            $tickets = Ticket::with(['category','priority','status','assignedUser'])
+                ->where('moodle_user_id', $moodleUserId)
+                ->latest()
+                ->paginate(10);
+                
+            return response()->json($tickets, Response::HTTP_OK);
+        }
     }
 
     public function getTicketsAssignedToLocalUser($userId)

@@ -24,6 +24,8 @@ class TicketRequest extends FormRequest
             'contact_email' => 'required|email|max:255',
 
             'moodle_user_id' => 'nullable|integer',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'exists:tags,id',
         ];
     }
 }

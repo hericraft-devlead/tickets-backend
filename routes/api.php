@@ -29,6 +29,8 @@ Route::get('/test', function () {
 Route::post('/tickets', [TicketController::class, 'createTicket']);
 Route::get('/categories', [CategoryController::class, 'getCategories']);
 Route::get('/priorities', [PriorityController::class, 'getPriorities']);
+Route::get('/tags', [TagController::class, 'getTags']);
+Route::get('/ticket-statuses', [TicketStatusController::class, 'getStatuses']);
 
 /*
 |--------------------------------------------------------------------------
@@ -88,15 +90,8 @@ Route::middleware('auth.local')->group(function () {
     | TAGS (solo locales)
     |--------------------------------------------------------------------------
     */
-    Route::get('/tags', [TagController::class, 'getTags']);
     Route::post('/tags', [TagController::class, 'createTag']);
 
-    /*
-    |--------------------------------------------------------------------------
-    | TICKET STATUS (solo locales)
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/ticket-statuses', [TicketStatusController::class, 'getStatuses']);
 
     /*
     |--------------------------------------------------------------------------
