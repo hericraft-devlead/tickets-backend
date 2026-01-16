@@ -21,5 +21,16 @@ class AdminUserSeeder extends Seeder
                 'department_id' => null,
             ]
         );
+        User::updateOrCreate(
+            [
+                'email' => '123@tickets.com',
+            ],
+            [
+                'name' => 'Maverik',
+                'password' => Hash::make('prueba123'),
+                'role' => 1, 
+                'department_id' => 1,
+            ]
+        );
     }
 }

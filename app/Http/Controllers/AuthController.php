@@ -55,10 +55,6 @@ class AuthController extends Controller
         return $this->createLoginResponse($moodleUser);
     }
 
-
-/**
- * Crear respuesta de login exitoso
- */
     private function createLoginResponse($moodleUser)
     {
         $localMoodleUser = MoodleUser::where(
@@ -94,7 +90,7 @@ class AuthController extends Controller
             
             'moodle_user' => [
                 'id' => $localMoodleUser->moodle_user_id, 
-                'moodle_user_id' => $localMoodleUser->moodle_user_id,
+                'moodle_user_id' => $localMoodleUser->moodle_user_id, 
                 'name' => $localMoodleUser->name,
                 'email' => $localMoodleUser->email,
                 'username' => $localMoodleUser->username,
@@ -102,9 +98,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Probar el servicio personalizado de login
-     */
     public function testCustomLogin(Request $request)
     {
         $request->validate([
@@ -125,9 +118,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Verificar token (para mantener sesión)
-     */
     public function checkAuth(Request $request)
     {
         return response()->json([
@@ -136,9 +126,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Logout
-     */
+
     public function logout(Request $request)
     {
         return response()->json([
@@ -147,7 +135,6 @@ class AuthController extends Controller
         ]);
     }
 
- 
     public function profile($userId)
     {
         
