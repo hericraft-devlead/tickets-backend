@@ -23,13 +23,24 @@ class AdminUserSeeder extends Seeder
         );
         User::updateOrCreate(
             [
-                'email' => '123@tickets.com',
+                'email' => 'cristianglz777@gmail.com',
             ],
             [
                 'name' => 'Maverik',
                 'password' => Hash::make('prueba123'),
                 'role' => 1, 
-                'department_id' => 1,
+                'department_id' => 3,
+            ]
+        );
+        User::updateOrCreate(
+            [
+                'email' => 'zxcris02@gmail.com',
+            ],
+            [
+                'name' => 'cris',
+                'password' => Hash::make('prueba1234'),
+                'role' => 0, 
+                'department_id' => 3,
             ]
         );
     }

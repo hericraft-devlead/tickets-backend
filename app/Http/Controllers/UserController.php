@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\User;
@@ -55,11 +56,35 @@ class UserController extends Controller
     /**
      * Listar usuarios (ADMIN)
      */
-    public function getUsers()
+    public function getUsers(Request $request)
     {
-        $users = User::with('department:id,name')->get();
-
-        return response()->json($users, Response::HTTP_OK);
+        $query = User::with('department');
+        
+        // Búsqueda por nombre o email
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Filtrar por departamento
+        if ($request->has('department_id') && $request->department_id) {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        // Paginación
+        $perPage = $request->get('limit', 10);
+        $users = $query->paginate($perPage);
+        
+        return response()->json([
+            'data' => $users->items(),
+            'total' => $users->total(),
+            'current_page' => $users->currentPage(),
+            'per_page' => $users->perPage(),
+            'last_page' => $users->lastPage()
+        ]);
     }
 
     /**
@@ -68,7 +93,7 @@ class UserController extends Controller
     public function getUsersById($id)
     {
         $user = User::with('department:id,name')
-            ->select('id', 'name', 'email', 'type', 'department_id')
+            ->select('id', 'name', 'email', 'role', 'department_id')
             ->where('id', $id)
             ->firstOrFail();
 
@@ -177,5 +202,49 @@ class UserController extends Controller
             'message' => 'Perfil actualizado correctamente',
             'user'    => $user->load('department:id,name')
         ], Response::HTTP_OK);
+    }
+
+    /**
+     * Obtener usuarios por departamento
+     */
+    public function getUsersByDepartment($departmentId)
+    {
+        try {
+            $users = User::where('department_id', $departmentId)
+                ->select('id', 'name', 'email', 'role', 'department_id', 'created_at')
+                ->orderBy('name')
+                ->get()
+                ->map(function($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                        'role_name' => $user->getRoleName(),
+                        'department_id' => $user->department_id,
+                        'is_admin' => $user->isAdmin(),
+                        'is_department_head' => $user->isDepartmentHead(),
+                        'is_support_agent' => $user->isSupportAgent(),
+                        'created_at' => $user->created_at->format('Y-m-d H:i:s')
+                    ];
+                });
+                
+            return response()->json([
+                'success' => true,
+                'users' => $users,
+                'count' => $users->count()
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error obteniendo usuarios por departamento:', [
+                'department_id' => $departmentId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener usuarios del departamento'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

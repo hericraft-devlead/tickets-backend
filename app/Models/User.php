@@ -24,14 +24,45 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-
     public function department()
     {
         return $this->belongsTo(Department::class);
     }
 
+    // Super Admin (sin departamento asignado)
     public function isAdmin(): bool
     {
-        return $this->role === 0;
+        return $this->role === 0 && is_null($this->department_id);
+    }
+
+    // Jefe de Departamento (admin con departamento asignado)
+    public function isDepartmentHead(): bool
+    {
+        return $this->role === 0 && !is_null($this->department_id);
+    }
+
+    // Agente de soporte
+    public function isSupportAgent(): bool
+    {
+        return $this->role === 1;
+    }
+
+    public function getRoleName(): string
+    {
+        if ($this->isAdmin()) {
+            return 'Super Administrador';
+        } elseif ($this->isDepartmentHead()) {
+            return 'Jefe de Departamento';
+        } elseif ($this->isSupportAgent()) {
+            return 'Agente de Soporte';
+        }
+        
+        return 'Usuario';
+    }
+
+    // Para compatibilidad con código existente
+    public function getIsAdminAttribute(): bool
+    {
+        return $this->isAdmin();
     }
 }

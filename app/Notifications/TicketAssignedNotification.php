@@ -11,7 +11,10 @@ class TicketAssignedNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public Ticket $ticket) {}
+    public function __construct(
+        public Ticket $ticket,
+        public ?string $notes = null 
+    ) {}
 
     public function via($notifiable)
     {
@@ -20,15 +23,24 @@ class TicketAssignedNotification extends Notification
 
     public function toMail($notifiable)
     {
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject('🎯 Ticket asignado a ti')
             ->greeting('Hola ' . $notifiable->name)
             ->line('Se te ha asignado un nuevo ticket para atender.')
+            ->line('')
             ->line('📌 **Título:** ' . $this->ticket->title)
             ->line('📝 **Descripción:** ' . $this->ticket->description)
             ->line('📂 **Categoría:** ' . $this->ticket->category->name)
             ->line('⚡ **Prioridad:** ' . $this->ticket->priority->name)
-            ->line('📧 **Email:** ' . $this->ticket->contact_email)
+            ->line('📧 **Email de contacto:** ' . $this->ticket->contact_email);
+
+        // Agregar notas si existen
+        if ($this->notes) {
+            $mail->line('')
+                 ->line('📋 **Notas de asignación:** ' . $this->notes);
+        }
+
+        return $mail->line('')
             ->action(
                 'Ver y atender ticket',
                 config('app.frontend_url') . '/tickets/' . $this->ticket->id
