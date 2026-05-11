@@ -32,9 +32,6 @@ class TicketTransferredNotification extends Notification implements ShouldQueue
         return ['mail', 'database'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
@@ -54,13 +51,9 @@ class TicketTransferredNotification extends Notification implements ShouldQueue
             ->line('⚡ Prioridad: ' . $this->ticket->priority->name)
             ->line('📊 Estado: ' . $this->ticket->status->name)
             ->line('')
-            ->action('Ver Ticket', $this->getTicketUrl())
             ->line('Por favor, revisa el ticket lo antes posible.');
     }
 
-    /**
-     * Get the array representation for database storage.
-     */
     public function toArray(object $notifiable): array
     {
         return [

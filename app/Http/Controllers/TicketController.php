@@ -12,6 +12,7 @@ use App\Notifications\NewTicketNotification;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketTransferredNotification;
 use App\Notifications\TicketUnassignedNotification;
+use App\Notifications\TicketCreatorAssignedNotification; // Nueva notificación
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -118,10 +119,13 @@ class TicketController extends Controller
             
             $assignedUser = User::find($request->assigned_user_id);
             if ($assignedUser) {
+                // Notificar al usuario asignado
                 $assignedUser->notify(new TicketAssignedNotification($ticket));
+                
+                // Notificar al creador del ticket (nuevo)
+                $this->notifyTicketCreator($ticket, $assignedUser);
             }
         }
-        
 
         if ($request->has('status_id') && $request->status_id == 4) { 
             $ticket->update(['closed_at' => now()]);
@@ -293,6 +297,9 @@ class TicketController extends Controller
             if ($oldAssignedUserId != $validated['assigned_user_id']) {
                 $assignedUser->notify(new TicketAssignedNotification($ticket, $validated['notes'] ?? null));
                 
+                // Notificar al creador del ticket (nuevo)
+                $this->notifyTicketCreator($ticket, $assignedUser, $validated['notes'] ?? null);
+                
                 // Notificar al usuario anterior
                 if ($oldAssignedUserId) {
                     $previousUser = User::find($oldAssignedUserId);
@@ -352,7 +359,7 @@ class TicketController extends Controller
             $ticket->update([
                 'department_id' => $validated['department_id'],
                 'assigned_user_id' => null, // Quitar asignación al cambiar de departamento
-                'status_id' => 1 // Volver a "Abierto" (ajusta el ID según tus estados)
+                'status_id' => 1 // Volver a "Abierto"
             ]);
             
             // Notificar a los usuarios del nuevo departamento si se solicita
@@ -407,7 +414,6 @@ class TicketController extends Controller
                 ], Response::HTTP_FORBIDDEN);
             }
             
-            
             $this->validateAssignmentPermissions($user, $ticket);
             
             $validated = $request->validate([
@@ -439,6 +445,11 @@ class TicketController extends Controller
                 'Ticket reasignado: ' . ($validated['reason'] ?? 'Sin motivo especificado')
             ));
             
+            // Notificar al creador del ticket sobre la reasignación (nuevo)
+            $this->notifyTicketCreator($ticket, $newUser, 
+                'El ticket ha sido reasignado: ' . ($validated['reason'] ?? 'Sin motivo especificado')
+            );
+            
             // Notificar al usuario anterior
             $oldUser = User::find($oldUserId);
             if ($oldUser) {
@@ -468,6 +479,54 @@ class TicketController extends Controller
                 'message' => 'Error al reasignar ticket',
                 'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método auxiliar para notificar al creador del ticket
+     * (Nuevo método agregado)
+     */
+    private function notifyTicketCreator(Ticket $ticket, User $assignedUser, ?string $notes = null)
+    {
+        try {
+            // Cargar relaciones necesarias si no están cargadas
+            if (!$ticket->relationLoaded('category')) {
+                $ticket->load('category');
+            }
+            if (!$ticket->relationLoaded('priority')) {
+                $ticket->load('priority');
+            }
+            
+            // Verificar que el ticket tenga email de contacto
+            if (empty($ticket->contact_email)) {
+                \Log::warning('Ticket sin email de contacto:', [
+                    'ticket_id' => $ticket->id,
+                    'contact_name' => $ticket->contact_name
+                ]);
+                return;
+            }
+            
+            // Usar Notification facade para enviar al email del creador
+            Notification::route('mail', [
+                $ticket->contact_email => $ticket->contact_name
+            ])->notify(new TicketCreatorAssignedNotification(
+                $ticket, 
+                $assignedUser, 
+                $notes
+            ));
+            
+            \Log::info('Notificación enviada al creador del ticket:', [
+                'ticket_id' => $ticket->id,
+                'to' => $ticket->contact_email,
+                'assigned_to' => $assignedUser->name
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error notificando al creador del ticket:', [
+                'ticket_id' => $ticket->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 

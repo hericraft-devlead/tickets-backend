@@ -50,7 +50,6 @@ class TicketUnassignedNotification extends Notification implements ShouldQueue
             ->line('⚡ Prioridad: ' . $this->ticket->priority->name)
             ->line('📊 Estado: ' . $this->ticket->status->name)
             ->line('')
-            ->action('Ver Historial', $this->getDashboardUrl())
             ->line('El ticket ha sido reasignado a otro miembro del equipo.');
     }
 

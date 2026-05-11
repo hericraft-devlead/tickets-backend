@@ -41,10 +41,6 @@ class TicketAssignedNotification extends Notification
         }
 
         return $mail->line('')
-            ->action(
-                'Ver y atender ticket',
-                config('app.frontend_url') . '/tickets/' . $this->ticket->id
-            )
             ->line('Por favor atiéndelo lo antes posible.');
     }
 }

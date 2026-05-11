@@ -27,10 +27,6 @@ class NewTicketNotification extends Notification
             ->line('📌 Título: ' . $this->ticket->title)
             ->line('📂 Categoría: ' . $this->ticket->category->name)
             ->line('⚡ Prioridad: ' . $this->ticket->priority->name)
-            ->action(
-                'Ver ticket',
-                config('app.frontend_url') . '/tickets/' . $this->ticket->id
-            )
             ->line('Por favor atiéndelo lo antes posible.');
     }
 }
